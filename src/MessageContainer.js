@@ -32,7 +32,10 @@ export default class MessageContainer extends React.Component {
     const next = nextProps.messages;
     const current = this.props.messages;
     return (
-      next.length !== current.length || next.extraData !== current.extraData || next.loadEarlier !== current.loadEarlier
+      next.length !== current.length || 
+      next.extraData !== current.extraData || 
+      next.loadEarlier !== current.loadEarlier ||
+      (nextProps.shouldMessagesUpdate?.(this.props.messages, nextProps.messages))
     );
   }
 

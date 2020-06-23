@@ -240,6 +240,8 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   alwaysShowSend?: boolean;
   /* Image style */
   imageStyle?: ViewStyle;
+  /* Override default simple compare functionality to cause messages to re-render */
+  shouldMessagesUpdate?: (currentMessages: TMessage[], nextMessages: TMessage[]) => boolean
 }
 
 export class GiftedChat extends React.Component<GiftedChatProps> {
