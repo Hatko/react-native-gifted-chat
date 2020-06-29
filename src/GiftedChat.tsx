@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types'
 import React, { RefObject } from 'react'
-import { Animated, Platform, StyleSheet, View, ViewStyle } from 'react-native'
+import { Animated, Platform, StyleSheet, View, ViewStyle, SafeAreaView } from 'react-native'
 
 import ActionSheet from '@expo/react-native-action-sheet'
 import moment from 'moment'
 import uuid from 'uuid'
+import { isIphoneX } from 'react-native-iphone-x-helper'
 
 import * as utils from './utils'
 import Actions from './Actions'
@@ -30,7 +31,8 @@ import {
   TIME_FORMAT,
   DATE_FORMAT,
 } from './Constant'
-import { IMessage, User } from './types'
+import { IMessage, User, Reply } from './types'
+import QuickReplies from './QuickReplies'
 
 const GiftedActionSheet = ActionSheet as any
 
@@ -146,6 +148,8 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   onInputTextChanged?(text: string): void
   /* Custom parse patterns for react-native-parsed-text used to linking message content (like URLs and phone numbers) */
   parsePatterns?(): React.ReactNode
+  onQuickReply?(replies: Reply[]): void
+  renderQuickReplies?(quickReplies: QuickReplies['props']): React.ReactNode
 }
 
 interface GiftedChatState {
@@ -384,7 +388,7 @@ class GiftedChat extends React.Component<GiftedChatProps, GiftedChatState> {
 
   setTextFromProp(textProp?: string) {
     // Text prop takes precedence over state.
-    if (!textProp && textProp !== this.state.text) {
+    if (textProp !== undefined && textProp !== this.state.text) {
       this.setState({ text: textProp })
     }
   }
@@ -502,12 +506,19 @@ class GiftedChat extends React.Component<GiftedChatProps, GiftedChatState> {
     return value
   }
 
+  safeAreaIphoneX = (bottomOffset: number) => {
+    if(isIphoneX()) {
+      return bottomOffset === this._bottomOffset ? 33 : bottomOffset;
+    }
+    return bottomOffset;
+  }
+
   onKeyboardWillShow = (e: any) => {
     this.setIsTypingDisabled(true)
     this.setKeyboardHeight(
       e.endCoordinates ? e.endCoordinates.height : e.end.height,
     )
-    this.setBottomOffset(this.props.bottomOffset!)
+    this.setBottomOffset(this.safeAreaIphoneX(this.props.bottomOffset!))
     const newMessagesContainerHeight = this.getMessagesContainerHeightWithKeyboard()
     if (this.props.isAnimated === true) {
       Animated.timing(this.state.messagesContainerHeight!, {
@@ -751,14 +762,16 @@ class GiftedChat extends React.Component<GiftedChatProps, GiftedChatState> {
   render() {
     if (this.state.isInitialized === true) {
       return (
-        <GiftedActionSheet
-          ref={(component: any) => (this._actionSheetRef = component)}
-        >
-          <View style={styles.container} onLayout={this.onMainViewLayout}>
-            {this.renderMessages()}
-            {this.renderInputToolbar()}
-          </View>
-        </GiftedActionSheet>
+        <SafeAreaView style={styles.safeArea}>
+          <GiftedActionSheet
+            ref={(component: any) => (this._actionSheetRef = component)}
+          >
+            <View style={styles.container} onLayout={this.onMainViewLayout}>
+              {this.renderMessages()}
+              {this.renderInputToolbar()}
+            </View>
+          </GiftedActionSheet>
+        </SafeAreaView>
       )
     }
     return (
@@ -773,6 +786,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  safeArea: {
+    flex: 1
+  }
 })
 
 export {

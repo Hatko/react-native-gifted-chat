@@ -1,8 +1,8 @@
 {
   "name": "react-native-gifted-chat",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "The most complete chat UI for React Native",
-  "main": "lib/index.js",
+  "main": "node_modules/expo/AppEntry.js",
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/FaridSafi/react-native-gifted-chat#readme",
   "scripts": {
+    "config:dev": "json -I -f package.json -e 'this.main=\"node_modules/expo/AppEntry.js\"'",
+    "config:npm": "json -I -f package.json -e 'this.main=\"lib/index.js\"'",
     "lint": "tslint --project .",
     "tsc": "node_modules/.bin/tsc --noEmit",
     "build": "rm -rf lib/ && node_modules/.bin/tsc",
@@ -32,8 +34,8 @@
     "test": "TZ=Europe/Paris jest --no-watchman",
     "test:watch": "TZ=Europe/Paris jest --watch",
     "test:coverage": "TZ=Europe/Paris jest --coverage",
-    "prepublishOnly": "yarn lint && yarn build && yarn test",
-    "postinstall": "cd node_modules/react-native-gifted-chat && yarn install && yarn build"
+    "prepublishOnly": "yarn lint && yarn build && yarn test && yarn config:npm",
+    "postpublish": "yarn config:dev"
   },
   "jest": {
     "preset": "react-native",
@@ -62,7 +64,7 @@
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-typescript": "^7.1.0",
-    "@types/jest": "24.0.11",
+    "@types/jest": "24.0.13",
     "@types/react": "^16.7.17",
     "@types/react-native": "^0.57.19",
     "@types/react-native-communications": "2.2.1",
@@ -71,22 +73,26 @@
     "@types/uuid": "3.4.4",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "24.7.1",
-    "metro-react-native-babel-preset": "0.53.1",
+    "babel-preset-expo": "^5.0.0",
     "husky": "0.15.0-rc.2",
-    "jest": "24.7.1",
+    "jest-expo": "^32.0.0",
     "prettier": "1.15.3",
     "prop-types": "15.6.2",
-    "react": "16.8.1",
-    "react-native": "0.57.7",
-    "react-test-renderer": "16.8.1",
+    "react": "16.5.1",
+    "json": "^9.0.6",
+    "react-test-renderer": "16.5.1",
     "tslint": "5.12.0",
     "tslint-config-prettier": "1.17.0",
-    "typescript": "3.4.5"
+    "typescript": "3.4.5",
+    "expo": "^32.0.0",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
+    "react-native-nav": "2.0.2"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^2.0.1",
     "moment": "^2.19.0",
     "react-native-communications": "2.2.1",
+    "react-native-iphone-x-helper": "^1.2.0",
     "react-native-lightbox": "^0.7.0",
     "react-native-parsed-text": "^0.0.21",
     "uuid": "3.3.0"
