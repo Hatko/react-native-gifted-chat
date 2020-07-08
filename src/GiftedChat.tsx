@@ -50,6 +50,8 @@ import QuickReplies from './QuickReplies'
 export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   /* Messages to display */
   messages?: TMessage[]
+  /* Messages container style */
+  messagesContainerStyle?: StyleProp<ViewStyle>
   /* Input text; default is undefined, but if specified, it will override GiftedChat's internal state */
   text?: string
   /* Controls whether or not the message bubbles appear at the top of the chat */
@@ -61,6 +63,8 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   initialText?: string
   /* Placeholder when text is empty; default is 'Type a message...' */
   placeholder?: string
+  /* Makes the composer not editable*/
+  disableComposer?: boolean
   /* User sending the messages: { _id, name, avatar } */
   user?: User
   /*  Locale to localize the dates */
@@ -172,7 +176,7 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   /* Callback when the input text changes */
   onInputTextChanged?(text: string): void
   /* Custom parse patterns for react-native-parsed-text used to linking message content (like URLs and phone numbers) */
-  parsePatterns?(): React.ReactNode
+  parsePatterns?(linkStyle: TextStyle): any
   onQuickReply?(replies: Reply[]): void
   renderQuickReplies?(quickReplies: QuickReplies['props']): React.ReactNode
   renderQuickReplySend?(): React.ReactNode
@@ -204,8 +208,10 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
 
   static defaultProps = {
     messages: [],
+    messagesContainerStyle: undefined,
     text: undefined,
     placeholder: DEFAULT_PLACEHOLDER,
+    disableComposer: false,
     messageIdGenerator: () => uuid.v4(),
     user: {},
     onSend: () => {},
@@ -266,9 +272,14 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
 
   static propTypes = {
     messages: PropTypes.arrayOf(PropTypes.object),
+    messagesContainerStyle: PropTypes.oneOfType([
+      PropTypes.object,
+      PropTypes.number,
+    ]),
     text: PropTypes.string,
     initialText: PropTypes.string,
     placeholder: PropTypes.string,
+    disableComposer: PropTypes.bool,
     messageIdGenerator: PropTypes.func,
     user: PropTypes.object,
     onSend: PropTypes.func,
@@ -616,14 +627,18 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   }
 
   renderMessages() {
+    const { messagesContainerStyle, ...messagesContainerProps } = this.props
     const fragment = (
       <View
-        style={{
-          height: this.state.messagesContainerHeight,
-        }}
+        style={[
+          {
+            height: this.state.messagesContainerHeight,
+          },
+          messagesContainerStyle,
+        ]}
       >
         <MessageContainer
-          {...this.props}
+          {...messagesContainerProps}
           invertibleScrollViewProps={this.invertibleScrollViewProps}
           messages={this.getMessages()}
           forwardRef={this._messageContainerRef}
