@@ -42,7 +42,7 @@
 <p align="center">
   <br/>
   <a href="https://www.lereacteur.io" target="_blank">
-    <img src="https://raw.githubusercontent.com/FaridSafi/react-native-gifted-chat/sponsor-lereacteur/media/logo_sponsor.png">
+    <img src="https://raw.githubusercontent.com/FaridSafi/react-native-gifted-chat/master/media/logo_sponsor.png">
   </a>
   <br>
   <p align="center">
@@ -132,48 +132,40 @@
 ## Example
 
 ```jsx
-import React from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { GiftedChat } from 'react-native-gifted-chat'
 
-class Example extends React.Component {
-  state = {
-    messages: [],
-  }
+export function Example() {
+  const [messages, setMessages] = useState([]);
 
-  componentDidMount() {
-    this.setState({
-      messages: [
-        {
-          _id: 1,
-          text: 'Hello developer',
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'React Native',
-            avatar: 'https://placeimg.com/140/140/any',
-          },
+  useEffect(() => {
+    setMessages([
+      {
+        _id: 1,
+        text: 'Hello developer',
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'React Native',
+          avatar: 'https://placeimg.com/140/140/any',
         },
-      ],
-    })
-  }
+      },
+    ])
+  }, [])
 
-  onSend(messages = []) {
-    this.setState(previousState => ({
-      messages: GiftedChat.append(previousState.messages, messages),
-    }))
-  }
+  const onSend = useCallback((messages = []) => {
+    setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
+  }, [])
 
-  render() {
-    return (
-      <GiftedChat
-        messages={this.state.messages}
-        onSend={messages => this.onSend(messages)}
-        user={{
-          _id: 1,
-        }}
-      />
-    )
-  }
+  return (
+    <GiftedChat
+      messages={messages}
+      onSend={messages => onSend(messages)}
+      user={{
+        _id: 1,
+      }}
+    />
+  )
 }
 ```
 
@@ -189,6 +181,23 @@ See the files in [`example-slack-message`](example-slack-message) for an example
 
 > e.g. Chat Message
 
+```ts
+export interface IMessage {
+  _id: string | number
+  text: string
+  createdAt: Date | number
+  user: User
+  image?: string
+  video?: string
+  audio?: string
+  system?: boolean
+  sent?: boolean
+  received?: boolean
+  pending?: boolean
+  quickReplies?: QuickReplies
+}
+```
+
 ```js
 {
   _id: 1,
@@ -202,6 +211,12 @@ See the files in [`example-slack-message`](example-slack-message) for an example
   image: 'https://facebook.github.io/react/img/logo_og.png',
   // You can also add a video prop:
   video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+  // Mark the message as sent, using one tick
+  sent: true,
+  // Mark the message as received, using two tick
+  received: true,
+  // Mark the message as pending with a clock loader
+  pending: true,
   // Any additional custom parameters are passed through
 }
 ```
@@ -302,10 +317,10 @@ interface QuickReplies {
 - **`user`** _(Object)_ - User sending the messages: `{ _id, name, avatar }`
 - **`onSend`** _(Function)_ - Callback when sending a message
 - **`alwaysShowSend`** _(Bool)_ - Always show send button in input text composer; default `false`, show only when text input is not empty
-- **`locale`** _(String)_ - Locale to localize the dates
+- **`locale`** _(String)_ - Locale to localize the dates. You need first to import the locale you need (ie. `require('dayjs/locale/de')` or `import 'dayjs/locale/fr'`)
 - **`timeFormat`** _(String)_ - Format to use for rendering times; default is `'LT'`
 - **`dateFormat`** _(String)_ - Format to use for rendering dates; default is `'ll'`
-- **`loadEarlier`** _(Bool)_ - Enables the "load earlier messages" button
+- **`loadEarlier`** _(Bool)_ - Enables the "load earlier messages" button, required for `infiniteScroll`
 - **`isKeyboardInternallyHandled`** _(Bool)_ - Determine whether to handle keyboard awareness inside the plugin. If you have your own keyboard handling outside the plugin set this to false; default is `true`
 - **`onLoadEarlier`** _(Function)_ - Callback when loading earlier messages
 - **`isLoadingEarlier`** _(Bool)_ - Display an `ActivityIndicator` when loading earlier messages
@@ -318,6 +333,7 @@ interface QuickReplies {
 - **`onLongPressAvatar`** _(Function(`user`))_ - Callback when a message avatar is long-pressed
 - **`renderAvatarOnTop`** _(Bool)_ - Render the message avatar at the top of consecutive messages, rather than the bottom; default is `false`
 - **`renderBubble`** _(Function)_ - Custom message bubble
+- **`renderTicks`** _(Function(`message`))_ - Custom ticks indicator to display message status
 - **`renderSystemMessage`** _(Function)_ - Custom system message
 - **`onLongPress`** _(Function(`context`, `message`))_ - Callback when a message bubble is long-pressed; default is to show an ActionSheet with "Copy Text" (see [example using `showActionSheetWithOptions()`](https://github.com/FaridSafi/react-native-gifted-chat/blob/master@%7B2017-09-25%7D/src/Bubble.js#L96-L119))
 - **`inverted`** _(Bool)_ - Reverses display order of `messages`; default is `true`
@@ -376,6 +392,7 @@ interface QuickReplies {
 * **`quickReplyStyle`** _(StyleProp<ViewStyle>)_ - Custom quick reply view style
 * **`renderQuickReplySend`** _(Function)_ - Custom quick reply **send** view
 * **`shouldUpdateMessage`** _(Function)_ - Lets the message component know when to update outside of normal cases.
+* **`infiniteScroll`** _(Bool)_ - infinite scroll up when reach the top of messages container, automatically call onLoadEarlier function if exist (not yet supported for the web). You need to add `loadEarlier` prop too.
 
 ## Imperative methods
 
@@ -444,6 +461,8 @@ If you use React Navigation, additional handling may be required to account for 
 1. Install `yarn add -g expo-cli`
 2. `expo start -w`
 
+[Upgrade snack version](https://snackager.expo.io/bundle/react-native-gifted-chat@0.15.0?bypassCache=true)
+
 #### With create-react-app
 
 1. `yarn add -D react-app-rewired`
@@ -494,7 +513,7 @@ module.exports = function override(config, env) {
 
 ## Author
 
-Feel free to ask me questions on Twitter [@FaridSafi](https://www.twitter.com/FaridSafi)!
+Feel free to ask me questions on Twitter [@FaridSafi](https://www.twitter.com/FaridSafi)! or [@xcapetir](https://www.twitter.com/xcapetir)!
 
 ## Contributors
 

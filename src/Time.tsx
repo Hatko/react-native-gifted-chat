@@ -1,12 +1,11 @@
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import { StyleSheet, Text, View, ViewStyle, TextStyle } from 'react-native'
-
-import moment from 'moment'
+import dayjs from 'dayjs'
 
 import Color from './Color'
 import { TIME_FORMAT } from './Constant'
-import { LeftRightStyle, IMessage } from './types'
+import { LeftRightStyle, IMessage } from './Models'
 import { StylePropType } from './utils'
 
 const containerStyle = {
@@ -106,7 +105,7 @@ export default class Time<
               ] as TextStyle
             }
           >
-            {moment(currentMessage.createdAt)
+            {dayjs(currentMessage.createdAt)
               .locale(this.context.getLocale())
               .format(timeFormat)}
           </Text>

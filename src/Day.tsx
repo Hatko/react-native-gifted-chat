@@ -8,13 +8,13 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native'
-import moment from 'moment'
+import dayjs from 'dayjs'
 
 import Color from './Color'
 
 import { StylePropType, isSameDay } from './utils'
 import { DATE_FORMAT } from './Constant'
-import { IMessage } from './types'
+import { IMessage } from './Models'
 
 const styles = StyleSheet.create({
   container: {
@@ -51,7 +51,6 @@ export default class Day<
 
   static defaultProps = {
     currentMessage: {
-      // TODO: test if crash when createdAt === null
       createdAt: null,
     },
     previousMessage: {},
@@ -72,6 +71,7 @@ export default class Day<
     textStyle: StylePropType,
     dateFormat: PropTypes.string,
   }
+
   render() {
     const {
       dateFormat,
@@ -87,7 +87,7 @@ export default class Day<
         <View style={[styles.container, containerStyle]}>
           <View style={wrapperStyle}>
             <Text style={[styles.text, textStyle]}>
-              {moment(currentMessage.createdAt)
+              {dayjs(currentMessage.createdAt)
                 .locale(this.context.getLocale())
                 .format(dateFormat)}
             </Text>

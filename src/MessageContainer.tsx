@@ -20,7 +20,7 @@ import {
 import LoadEarlier from './LoadEarlier'
 import Message from './Message'
 import Color from './Color'
-import { User, IMessage, Reply } from './types'
+import { User, IMessage, Reply } from './Models'
 import { warning, StylePropType } from './utils'
 import TypingIndicator from './TypingIndicator'
 
@@ -86,6 +86,8 @@ export interface MessageContainerProps<TMessage extends IMessage> {
   scrollToBottomComponent?(): React.ReactNode
   onLoadEarlier?(): void
   onQuickReply?(replies: Reply[]): void
+  infiniteScroll?: boolean
+  isLoadingEarlier?: boolean
 }
 
 interface State {
@@ -113,6 +115,8 @@ export default class MessageContainer<
     scrollToBottomOffset: 200,
     alignTop: false,
     scrollToBottomStyle: {},
+    infiniteScroll: false,
+    isLoadingEarlier: false,
   }
 
   static propTypes = {
@@ -134,6 +138,7 @@ export default class MessageContainer<
     scrollToBottomComponent: PropTypes.func,
     alignTop: PropTypes.bool,
     scrollToBottomStyle: StylePropType,
+    infiniteScroll: PropTypes.bool,
   }
 
   state = {
@@ -367,6 +372,26 @@ export default class MessageContainer<
     }
   }
 
+  onEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {
+    const {
+      loadEarlier,
+      onLoadEarlier,
+      infiniteScroll,
+      isLoadingEarlier,
+    } = this.props
+    if (
+      infiniteScroll &&
+      distanceFromEnd > 0 &&
+      distanceFromEnd <= 100 &&
+      loadEarlier &&
+      onLoadEarlier &&
+      !isLoadingEarlier &&
+      Platform.OS !== 'web'
+    ) {
+      onLoadEarlier()
+    }
+  }
+
   keyExtractor = (item: TMessage) => `${item._id}`
 
   render() {
@@ -402,6 +427,8 @@ export default class MessageContainer<
           onScroll={this.handleOnScroll}
           scrollEventThrottle={100}
           onLayout={this.onLayoutList}
+          onEndReached={this.onEndReached}
+          onEndReachedThreshold={0.1}
           {...this.props.listViewProps}
         />
       </View>

@@ -1,25 +1,31 @@
-import React, { useState } from 'react'
-import { Animated } from 'react-native'
+import * as React from 'react'
+import { Animated, StyleSheet } from 'react-native'
 import { TypingAnimation } from 'react-native-typing-animation'
 import { useUpdateLayoutEffect } from './hooks/useUpdateLayoutEffect'
+import Color from './Color'
 
 interface Props {
-  isTyping: boolean
+  isTyping?: boolean
 }
 
-const TypingIndicator = (props: Props) => {
-  const [yCoords] = useState(new Animated.Value(200))
-  const [heightScale] = useState(new Animated.Value(0))
-  const [marginScale] = useState(new Animated.Value(0))
+const TypingIndicator = ({ isTyping }: Props) => {
+  const { yCoords, heightScale, marginScale } = React.useMemo(
+    () => ({
+      yCoords: new Animated.Value(200),
+      heightScale: new Animated.Value(0),
+      marginScale: new Animated.Value(0),
+    }),
+    [],
+  )
 
   // on isTyping fire side effect
   useUpdateLayoutEffect(() => {
-    if (props.isTyping) {
+    if (isTyping) {
       slideIn()
     } else {
       slideOut()
     }
-  }, [props.isTyping])
+  }, [isTyping])
 
   // side effect
   const slideIn = () => {
@@ -60,10 +66,10 @@ const TypingIndicator = (props: Props) => {
       }),
     ]).start()
   }
-
   return (
     <Animated.View
       style={[
+        styles.container,
         {
           transform: [
             {
@@ -71,22 +77,29 @@ const TypingIndicator = (props: Props) => {
             },
           ],
           height: heightScale,
-          marginLeft: 8,
           marginBottom: marginScale,
-          width: 45,
-          borderRadius: 15,
-          backgroundColor: '#f0f0f0',
         },
       ]}
     >
-      <TypingAnimation
-        style={{ marginLeft: 6, marginTop: 7.2 }}
-        dotRadius={4}
-        dotMargin={5.5}
-        dotColor={'rgba(0, 0, 0, 0.38)'}
-      />
+      {isTyping ? (
+        <TypingAnimation
+          style={{ marginLeft: 6, marginTop: 7.2 }}
+          dotRadius={4}
+          dotMargin={5.5}
+          dotColor={'rgba(0, 0, 0, 0.38)'}
+        />
+      ) : null}
     </Animated.View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginLeft: 8,
+    width: 45,
+    borderRadius: 15,
+    backgroundColor: Color.leftBubbleBackground,
+  },
+})
 
 export default TypingIndicator

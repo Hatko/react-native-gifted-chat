@@ -12,14 +12,14 @@ import {
   TextStyle,
   KeyboardAvoidingView,
 } from 'react-native'
-
 import {
   ActionSheetProvider,
   ActionSheetOptions,
 } from '@expo/react-native-action-sheet'
-import moment from 'moment'
 import uuid from 'uuid'
 import { getBottomSpace } from 'react-native-iphone-x-helper'
+import dayjs from 'dayjs'
+import localizedFormat from 'dayjs/plugin/localizedFormat'
 
 import * as utils from './utils'
 import Actions from './Actions'
@@ -45,10 +45,10 @@ import {
   TIME_FORMAT,
   DATE_FORMAT,
 } from './Constant'
-import { IMessage, User, Reply, LeftRightStyle } from './types'
+import { IMessage, User, Reply, LeftRightStyle } from './Models'
 import QuickReplies from './QuickReplies'
 
-// const GiftedActionSheet = ActionSheet as any
+dayjs.extend(localizedFormat)
 
 export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   /* Messages to display */
@@ -126,6 +126,8 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   quickReplyStyle?: StyleProp<ViewStyle>
   /* optional prop used to place customView below text, image and video views; default is false */
   isCustomViewBottom?: boolean
+  /* infinite scroll up when reach the top of messages container, automatically call onLoadEarlier function if exist */
+  infiniteScroll?: boolean
   timeTextStyle?: LeftRightStyle<TextStyle>
   /* Custom action sheet */
   actionSheet?(): {
@@ -388,7 +390,6 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   _locale: string = 'en'
   invertibleScrollViewProps: any = undefined
   _actionSheetRef: any = undefined
-
   _messageContainerRef?: RefObject<FlatList<IMessage>> = React.createRef()
   textInput?: any
 
@@ -456,10 +457,7 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   }
 
   initLocale() {
-    if (
-      this.props.locale === null ||
-      moment.locales().indexOf(this.props.locale || 'en') === -1
-    ) {
+    if (this.props.locale === null) {
       this.setLocale('en')
     } else {
       this.setLocale(this.props.locale || 'en')
@@ -586,7 +584,11 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   }
 
   safeAreaSupport = (bottomOffset: number) => {
-    return bottomOffset === this._bottomOffset ? (this.getBottomOffset() ? this.getBottomOffset() : getBottomSpace()) : bottomOffset
+    return bottomOffset === this._bottomOffset
+      ? this.getBottomOffset()
+        ? this.getBottomOffset()
+        : getBottomSpace()
+      : bottomOffset
   }
 
   onKeyboardWillShow = (e: any) => {
@@ -786,8 +788,10 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     ) {
       this.setMaxHeight(layout.height)
       this.setState({
-        messagesContainerHeight: (this._keyboardHeight > 0) ?
-          this.getMessagesContainerHeightWithKeyboard() : this.getBasicMessagesContainerHeight(),
+        messagesContainerHeight:
+          this._keyboardHeight > 0
+            ? this.getMessagesContainerHeightWithKeyboard()
+            : this.getBasicMessagesContainerHeight(),
       })
     }
     if (this.getIsFirstLayout() === true) {
@@ -867,7 +871,7 @@ const styles = StyleSheet.create({
   },
 })
 
-export * from './types'
+export * from './Models'
 
 export {
   GiftedChat,
