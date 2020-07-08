@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   FlatList,
   TextStyle,
+  KeyboardAvoidingView,
 } from 'react-native'
 
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
@@ -68,8 +69,6 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   timeFormat?: string
   /* Format to use for rendering dates; default is 'll' */
   dateFormat?: string
-  /* Animates the view when the keyboard appears */
-  isAnimated?: boolean
   /* Enables the "Load earlier messages" button */
   loadEarlier?: boolean
   /*Display an ActivityIndicator when loading earlier messages*/
@@ -79,6 +78,8 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   /* When false, avatars will only be displayed when a consecutive message is from the same user on the same day; default is false */
   showAvatarForEveryMessage?: boolean
   /* Render the message avatar at the top of consecutive messages, rather than the bottom; default is false */
+  isKeyboardInternallyHandled?: boolean
+  /* Determine whether to handle keyboard awareness inside the plugin. If you have your own keyboard handling outside the plugin set this to false; default is true */
   renderAvatarOnTop?: boolean
   inverted?: boolean
   /* Extra props to be passed to the <Image> component created by the default renderMessageImage */
@@ -152,6 +153,8 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   renderTime?(props: Time['props']): React.ReactNode
   /* Custom footer component on the ListView, e.g. 'User is typing...' */
   renderFooter?(): React.ReactNode
+  /* Custom component to render in the ListView when messages are empty */
+  renderChatEmpty?(): React.ReactNode
   /* Custom component to render below the MessageContainer (separate from the ListView) */
   renderChatFooter?(): React.ReactNode
   /* Custom message composer container */
@@ -173,6 +176,8 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   onQuickReply?(replies: Reply[]): void
   renderQuickReplies?(quickReplies: QuickReplies['props']): React.ReactNode
   renderQuickReplySend?(): React.ReactNode
+  /* Scroll to bottom custom component */
+  scrollToBottomComponent?(): React.ReactNode
   shouldUpdateMessage?(
     props: Message['props'],
     nextProps: Message['props'],
@@ -207,11 +212,6 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     locale: null,
     timeFormat: TIME_FORMAT,
     dateFormat: DATE_FORMAT,
-    isAnimated: Platform.select({
-      ios: true,
-      android: false,
-      default: false,
-    }),
     loadEarlier: false,
     onLoadEarlier: () => {},
     isLoadingEarlier: false,
@@ -239,12 +239,14 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     renderDay: null,
     renderTime: null,
     renderFooter: null,
+    renderChatEmpty: null,
     renderChatFooter: null,
     renderInputToolbar: null,
     renderComposer: null,
     renderActions: null,
     renderSend: null,
     renderAccessory: null,
+    isKeyboardInternallyHandled: true,
     onPressActionButton: null,
     bottomOffset: 0,
     minInputToolbarHeight: 44,
@@ -273,7 +275,7 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     locale: PropTypes.string,
     timeFormat: PropTypes.string,
     dateFormat: PropTypes.string,
-    isAnimated: PropTypes.bool,
+    isKeyboardInternallyHandled: PropTypes.bool,
     loadEarlier: PropTypes.bool,
     onLoadEarlier: PropTypes.func,
     isLoadingEarlier: PropTypes.bool,
@@ -299,6 +301,7 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     renderDay: PropTypes.func,
     renderTime: PropTypes.func,
     renderFooter: PropTypes.func,
+    renderChatEmpty: PropTypes.func,
     renderChatFooter: PropTypes.func,
     renderInputToolbar: PropTypes.func,
     renderComposer: PropTypes.func,
@@ -401,13 +404,14 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   }
 
   componentDidUpdate(prevProps: GiftedChatProps<TMessage> = {}) {
-    const { messages, text } = this.props
+    const { messages, text, inverted } = this.props
 
     if (this.props !== prevProps) {
       this.setMessages(messages || [])
     }
 
     if (
+      inverted === false &&
       messages &&
       prevProps.messages &&
       messages.length !== prevProps.messages.length
@@ -550,13 +554,6 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     )
   }
 
-  prepareMessagesContainerHeight(value: number) {
-    if (this.props.isAnimated === true) {
-      return new Animated.Value(value)
-    }
-    return value
-  }
-
   safeAreaIphoneX = (bottomOffset: number) => {
     if (isIphoneX()) {
       return bottomOffset === this._bottomOffset ? 33 : bottomOffset
@@ -565,18 +562,13 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   }
 
   onKeyboardWillShow = (e: any) => {
-    this.setIsTypingDisabled(true)
-    this.setKeyboardHeight(
-      e.endCoordinates ? e.endCoordinates.height : e.end.height,
-    )
-    this.setBottomOffset(this.safeAreaIphoneX(this.props.bottomOffset!))
-    const newMessagesContainerHeight = this.getMessagesContainerHeightWithKeyboard()
-    if (this.props.isAnimated === true) {
-      Animated.timing(this.state.messagesContainerHeight!, {
-        toValue: newMessagesContainerHeight,
-        duration: 210,
-      }).start()
-    } else {
+    if (this.props.isKeyboardInternallyHandled) {
+      this.setIsTypingDisabled(true)
+      this.setKeyboardHeight(
+        e.endCoordinates ? e.endCoordinates.height : e.end.height,
+      )
+      this.setBottomOffset(this.safeAreaIphoneX(this.props.bottomOffset!))
+      const newMessagesContainerHeight = this.getMessagesContainerHeightWithKeyboard()
       this.setState({
         messagesContainerHeight: newMessagesContainerHeight,
       })
@@ -584,16 +576,11 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   }
 
   onKeyboardWillHide = (_e: any) => {
-    this.setIsTypingDisabled(true)
-    this.setKeyboardHeight(0)
-    this.setBottomOffset(0)
-    const newMessagesContainerHeight = this.getBasicMessagesContainerHeight()
-    if (this.props.isAnimated === true) {
-      Animated.timing(this.state.messagesContainerHeight!, {
-        toValue: newMessagesContainerHeight,
-        duration: 210,
-      }).start()
-    } else {
+    if (this.props.isKeyboardInternallyHandled) {
+      this.setIsTypingDisabled(true)
+      this.setKeyboardHeight(0)
+      this.setBottomOffset(0)
+      const newMessagesContainerHeight = this.getBasicMessagesContainerHeight()
       this.setState({
         messagesContainerHeight: newMessagesContainerHeight,
       })
@@ -629,10 +616,8 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
   }
 
   renderMessages() {
-    const AnimatedView = this.props.isAnimated === true ? Animated.View : View
-
-    return (
-      <AnimatedView
+    const fragment = (
+      <View
         style={{
           height: this.state.messagesContainerHeight,
         }}
@@ -644,7 +629,13 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
           forwardRef={this._messageContainerRef}
         />
         {this.renderChatFooter()}
-      </AnimatedView>
+      </View>
+    )
+
+    return this.props.isKeyboardInternallyHandled ? (
+      <KeyboardAvoidingView enabled>{fragment}</KeyboardAvoidingView>
+    ) : (
+      fragment
     )
   }
 
@@ -690,9 +681,7 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     this.setState({
       text: this.getTextFromProp(''),
       composerHeight: newComposerHeight,
-      messagesContainerHeight: this.prepareMessagesContainerHeight(
-        newMessagesContainerHeight,
-      ),
+      messagesContainerHeight: newMessagesContainerHeight,
     })
   }
 
@@ -712,9 +701,7 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     )
     this.setState({
       composerHeight: newComposerHeight,
-      messagesContainerHeight: this.prepareMessagesContainerHeight(
-        newMessagesContainerHeight,
-      ),
+      messagesContainerHeight: newMessagesContainerHeight,
     })
   }
 
@@ -753,9 +740,7 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
       isInitialized: true,
       text: this.getTextFromProp(initialText),
       composerHeight: newComposerHeight,
-      messagesContainerHeight: this.prepareMessagesContainerHeight(
-        newMessagesContainerHeight,
-      ),
+      messagesContainerHeight: newMessagesContainerHeight,
     })
   }
 
@@ -768,9 +753,7 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
     ) {
       this.setMaxHeight(layout.height)
       this.setState({
-        messagesContainerHeight: this.prepareMessagesContainerHeight(
-          this.getBasicMessagesContainerHeight(),
-        ),
+        messagesContainerHeight: this.getBasicMessagesContainerHeight(),
       })
     }
     if (this.getIsFirstLayout() === true) {
