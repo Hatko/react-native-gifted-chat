@@ -12,6 +12,8 @@ import {
   ListRenderItemInfo,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  StyleProp,
+  ViewStyle,
 } from 'react-native'
 
 import LoadEarlier from './LoadEarlier'
@@ -40,8 +42,6 @@ const styles = StyleSheet.create({
   scrollToBottomStyle: {
     opacity: 0.8,
     position: 'absolute',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
     right: 10,
     bottom: 30,
     zIndex: 999,
@@ -66,6 +66,7 @@ export interface MessageContainerProps<TMessage extends IMessage> {
   loadEarlier?: boolean
   alignTop?: boolean
   scrollToBottom?: boolean
+  scrollToBottomStyle?: StyleProp<ViewStyle>
   invertibleScrollViewProps?: any
   extraData?: any
   scrollToBottomOffset?: number
@@ -100,6 +101,7 @@ export default class MessageContainer<
     scrollToBottom: false,
     scrollToBottomOffset: 200,
     alignTop: false,
+    scrollToBottomStyle: {},
   }
 
   static propTypes = {
@@ -307,8 +309,9 @@ export default class MessageContainer<
   }
 
   renderScrollToBottomWrapper() {
+    const propsStyle = this.props.scrollToBottomStyle || {}
     return (
-      <View style={styles.scrollToBottomStyle}>
+      <View style={[styles.scrollToBottomStyle, propsStyle]}>
         <TouchableOpacity
           onPress={() => this.scrollToBottom()}
           hitSlop={{ top: 5, left: 5, right: 5, bottom: 5 }}

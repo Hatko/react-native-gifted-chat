@@ -52,9 +52,11 @@ export interface GiftedChatProps<TMessage extends IMessage = IMessage> {
   /* Input text; default is undefined, but if specified, it will override GiftedChat's internal state */
   text?: string
   /* Controls whether or not the message bubbles appear at the top of the chat */
-  alignTop?: boolean;
+  alignTop?: boolean
   /* enables the scrollToBottom Component */
-  scrollToBottom?: boolean;
+  scrollToBottom?: boolean
+  /* Scroll to bottom wrapper style */
+  scrollToBottomStyle?: StyleProp<ViewStyle>
   initialText?: string
   /* Placeholder when text is empty; default is 'Type a message...' */
   placeholder?: string
@@ -400,14 +402,19 @@ class GiftedChat<TMessage extends IMessage = IMessage> extends React.Component<
 
   componentDidUpdate(prevProps: GiftedChatProps<TMessage> = {}) {
     const { messages, text } = this.props
+
+    if (this.props !== prevProps) {
+      this.setMessages(messages || [])
+    }
+
     if (
       messages &&
       prevProps.messages &&
       messages.length !== prevProps.messages.length
     ) {
-      this.setMessages(messages || [])
       setTimeout(() => this.scrollToBottom(false), 200)
     }
+
     if (text !== prevProps.text) {
       this.setTextFromProp(text)
     }

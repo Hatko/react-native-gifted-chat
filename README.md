@@ -10,7 +10,7 @@
   💬 Gifted Chat
 </h3>
 <p align="center">
-  The most complete chat UI for React Native
+  The most complete chat UI for React Native & Web
 </p>
 <p align="center">
   <a href="https://www.npmjs.com/package/react-native-gifted-chat">
@@ -69,7 +69,7 @@
 
 ## Features
 
-- **_`react-native-web`able_ (since 0.10.0)** [web configuration](#react-native-web)
+- 🎉 **_`react-native-web`able_ (since 0.10.0)** [web configuration](#react-native-web)
 - Write with **TypeScript** (since 0.8.0)
 - Fully customizable components
 - Composer actions (to attach photos, etc.)
@@ -84,10 +84,6 @@
 - System message
 - Quick Reply messages (bot)
 
-## Versions notes
-
-- Since v0.10.0 removed `react-native-video` dependency.
-
 ## Dependency
 
 - Use version `0.2.x` for RN `>= 0.44.0`
@@ -98,6 +94,11 @@
 
 - Using [npm](https://www.npmjs.com/#getting-started): `npm install react-native-gifted-chat --save`
 - Using [Yarn](https://yarnpkg.com/): `yarn add react-native-gifted-chat`
+
+### react-native-video and expo-av
+
+- Both dependencies are removed since `0.11.0`.
+- You still be able to provide a `video` but you need to provide `renderMessageVideo` prop.
 
 ## You have a question ?
 
@@ -407,14 +408,14 @@ If you use React Navigation, additional handling may be required to account for 
 
 ### Native
 
-1. Install `yarn add -g expo-cli@3.0.11-alpha.1`
+1. Install `yarn add -g expo-cli`
 2. `expo start`
 
 ### react-native-web
 
 #### With expo
 
-1. Install `yarn add -g expo-cli@3.0.11-alpha.1`
+1. Install `yarn add -g expo-cli`
 2. `expo start -w`
 
 #### With create-react-app
@@ -426,7 +427,7 @@ If you use React Navigation, additional handling may be required to account for 
 module.exports = function override(config, env) {
   config.module.rules.push({
     test: /\.js$/,
-    exclude: /node_modules[/\\](?!react-native-gifted-chat|react-native-lightbox|react-native-parsed-text|expo-av)/,
+    exclude: /node_modules[/\\](?!react-native-gifted-chat|react-native-lightbox|react-native-parsed-text)/,
     use: {
       loader: 'babel-loader',
       options: {
@@ -445,7 +446,9 @@ module.exports = function override(config, env) {
 }
 ```
 
-> **You will find an example and a demo here: [xcarpentier/gifted-chat-web-demo](https://github.com/xcarpentier/gifted-chat-web-demo)**
+> You will find an example and a **web demo** here: [xcarpentier/gifted-chat-web-demo](https://github.com/xcarpentier/gifted-chat-web-demo)
+
+> Another example with **Gatsby** : [xcarpentier/clean-archi-boilerplate](https://github.com/xcarpentier/clean-archi-boilerplate/tree/develop/apps/web)
 
 ## Questions
 
