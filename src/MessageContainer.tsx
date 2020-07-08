@@ -14,13 +14,15 @@ import {
   NativeScrollEvent,
   StyleProp,
   ViewStyle,
+  Platform,
 } from 'react-native'
 
 import LoadEarlier from './LoadEarlier'
 import Message from './Message'
 import Color from './Color'
 import { User, IMessage, Reply } from './types'
-import { warning } from './utils'
+import { warning, StylePropType } from './utils'
+import TypingIndicator from './TypingIndicator'
 
 const styles = StyleSheet.create({
   container: {
@@ -33,6 +35,10 @@ const styles = StyleSheet.create({
   contentContainerStyle: {
     flexGrow: 1,
     justifyContent: 'flex-start',
+  },
+  emptyChatContainer: {
+    flex: 1,
+    transform: [{ scaleY: -1 }],
   },
   headerWrapper: {
     flex: 1,
@@ -61,6 +67,7 @@ const styles = StyleSheet.create({
 
 export interface MessageContainerProps<TMessage extends IMessage> {
   messages?: TMessage[]
+  isTyping?: boolean
   user?: User
   listViewProps: Partial<ListViewProps>
   inverted?: boolean
@@ -91,6 +98,7 @@ export default class MessageContainer<
   static defaultProps = {
     messages: [],
     user: {},
+    isTyping: false,
     renderChatEmpty: null,
     renderFooter: null,
     renderMessage: null,
@@ -109,6 +117,7 @@ export default class MessageContainer<
 
   static propTypes = {
     messages: PropTypes.arrayOf(PropTypes.object),
+    isTyping: PropTypes.bool,
     user: PropTypes.object,
     renderChatEmpty: PropTypes.func,
     renderFooter: PropTypes.func,
@@ -119,11 +128,12 @@ export default class MessageContainer<
     inverted: PropTypes.bool,
     loadEarlier: PropTypes.bool,
     invertibleScrollViewProps: PropTypes.object,
-    extraData: PropTypes.object,
+    extraData: PropTypes.array,
     scrollToBottom: PropTypes.bool,
     scrollToBottomOffset: PropTypes.number,
     scrollToBottomComponent: PropTypes.func,
     alignTop: PropTypes.bool,
+    scrollToBottomStyle: StylePropType,
   }
 
   state = {
@@ -194,14 +204,19 @@ export default class MessageContainer<
     )
   }
 
+  renderTypingIndicator = () => {
+    if (Platform.OS === 'web') {
+      return null
+    }
+    return <TypingIndicator isTyping={this.props.isTyping || false} />
+  }
+
   renderFooter = () => {
     if (this.props.renderFooter) {
-      const footerProps = {
-        ...this.props,
-      }
-      return this.props.renderFooter(footerProps)
+      return this.props.renderFooter(this.props)
     }
-    return null
+
+    return this.renderTypingIndicator()
   }
 
   renderLoadEarlier = () => {
@@ -227,7 +242,7 @@ export default class MessageContainer<
     const { inverted } = this.props
     if (inverted) {
       this.scrollTo({ offset: 0, animated })
-    } else {
+    } else if (this.props.forwardRef && this.props.forwardRef.current) {
       this.props.forwardRef!.current!.scrollToEnd({ animated })
     }
   }
@@ -300,7 +315,13 @@ export default class MessageContainer<
 
   renderChatEmpty = () => {
     if (this.props.renderChatEmpty) {
-      return this.props.renderChatEmpty()
+      return this.props.inverted ? (
+        this.props.renderChatEmpty()
+      ) : (
+        <View style={styles.emptyChatContainer}>
+          {this.props.renderChatEmpty()}
+        </View>
+      )
     }
     return <View style={styles.container} />
   }
@@ -361,7 +382,7 @@ export default class MessageContainer<
           : null}
         <FlatList
           ref={this.props.forwardRef}
-          extraData={this.props.extraData}
+          extraData={[this.props.extraData, this.props.isTyping]}
           keyExtractor={this.keyExtractor}
           enableEmptySections
           automaticallyAdjustContentInsets={false}

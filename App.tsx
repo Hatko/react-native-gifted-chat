@@ -1,7 +1,8 @@
+import { MaterialIcons } from '@expo/vector-icons'
 import { AppLoading, Asset, Linking } from 'expo'
 import React, { Component } from 'react'
 import { StyleSheet, View, Text, Platform } from 'react-native'
-import { Bubble, GiftedChat, SystemMessage, IMessage } from './src'
+import { Bubble, GiftedChat, SystemMessage, IMessage, Send } from './src'
 
 import AccessoryBar from './example-expo/AccessoryBar'
 import CustomActions from './example-expo/CustomActions'
@@ -38,6 +39,7 @@ export default class App extends Component {
     typingText: null,
     isLoadingEarlier: false,
     appIsReady: false,
+    isTyping: false,
   }
 
   _isMounted = false
@@ -48,6 +50,7 @@ export default class App extends Component {
     this.setState({
       messages: messagesData, // messagesData.filter(message => message.system),
       appIsReady: true,
+      isTyping: false,
     })
   }
 
@@ -156,7 +159,15 @@ export default class App extends Component {
     this.onSend(messagesToUpload)
   }
 
-  renderAccessory = () => <AccessoryBar onSend={this.onSendFromUser} />
+  setIsTyping = () => {
+    this.setState({
+      isTyping: !this.state.isTyping,
+    })
+  }
+
+  renderAccessory = () => (
+    <AccessoryBar onSend={this.onSendFromUser} isTyping={this.setIsTyping} />
+  )
 
   renderCustomActions = props =>
     Platform.OS === 'web' ? null : (
@@ -180,17 +191,6 @@ export default class App extends Component {
       />
     )
   }
-
-  // renderFooter = props => {
-  //   if (this.state.typingText) {
-  //     return (
-  //       <View style={styles.footerContainer}>
-  //         <Text style={styles.footerText}>{this.state.typingText}</Text>
-  //       </View>
-  //     )
-  //   }
-  //   return null
-  // }
 
   onQuickReply = replies => {
     const createdAt = new Date()
@@ -218,6 +218,12 @@ export default class App extends Component {
   }
 
   renderQuickReplySend = () => <Text>{' custom send =>'}</Text>
+
+  renderSend = (props: Send['props']) => (
+    <Send {...props} containerStyle={{ justifyContent: 'center' }}>
+      <MaterialIcons size={30} color={'tomato'} name={'send'} />
+    </Send>
+  )
 
   render() {
     if (!this.state.appIsReady) {
@@ -249,10 +255,12 @@ export default class App extends Component {
           renderBubble={this.renderBubble}
           renderSystemMessage={this.renderSystemMessage}
           renderCustomView={this.renderCustomView}
+          renderSend={this.renderSend}
           quickReplyStyle={{ borderRadius: 2 }}
           renderQuickReplySend={this.renderQuickReplySend}
           inverted={Platform.OS !== 'web'}
           timeTextStyle={{ left: { color: 'red' }, right: { color: 'yellow' } }}
+          isTyping={this.state.isTyping}
         />
       </View>
     )
