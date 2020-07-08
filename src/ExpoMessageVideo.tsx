@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import { View, ViewPropTypes } from 'react-native'
-import Video from 'react-native-video'
+import { Video } from 'expo-av'
 import { IMessage, MessageVideoProps } from './types'
 
 export default class MessageVideo<
@@ -47,6 +47,7 @@ export default class MessageVideo<
           source={{ uri: currentMessage!.video! }}
           style={videoStyle}
           resizeMode='cover'
+          useNativeControls
         />
       </View>
     )

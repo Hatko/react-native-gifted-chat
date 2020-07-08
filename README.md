@@ -1,4 +1,5 @@
 <p align="center" >
+<p align="center" >
    <a href="https://reactnative.gallery/FaridSafi/gifted-chat">
     <img alt="react-native-gifted-chat" src="https://thumbs.gfycat.com/AbsoluteSadDobermanpinscher-size_restricted.gif" width="260" height="510" />
  </a>
@@ -25,6 +26,7 @@
   <a title='License' href="https://github.com/FaridSafi/react-native-gifted-chat/blob/master/LICENSE" height="18">
     <img src='https://img.shields.io/badge/license-MIT-blue.svg' />
   </a>
+  <a href="#hire-an-expert"><img src="https://img.shields.io/badge/%F0%9F%92%AA-hire%20an%20expert-brightgreen"/></a>
 </p>
 
 <p align="center">
@@ -67,6 +69,7 @@
 
 ## Features
 
+- **_`react-native-web`able_ (since 0.10.0)** [web configuration](#react-native-web)
 - Write with **TypeScript** (since 0.8.0)
 - Fully customizable components
 - Composer actions (to attach photos, etc.)
@@ -80,6 +83,10 @@
 - Redux support
 - System message
 - Quick Reply messages (bot)
+
+## Versions notes
+
+- Since v0.10.0 removed `react-native-video` dependency.
 
 ## Dependency
 
@@ -149,7 +156,7 @@ class Example extends React.Component {
 
 ## Advanced example
 
-See [`example/App.js`](example/App.js) for a working demo!
+See [`App.js`](App.js) for a working demo!
 
 ## "Slack" example
 
@@ -157,7 +164,7 @@ See the files in [`example-slack-message`](example-slack-message) for an example
 
 ## Message object
 
-e.g. Chat Message
+> e.g. Chat Message
 
 ```js
 {
@@ -176,7 +183,7 @@ e.g. Chat Message
 }
 ```
 
-e.g. System Message
+> e.g. System Message
 
 ```js
 {
@@ -188,7 +195,7 @@ e.g. System Message
 }
 ```
 
-### e.g. Chat Message with Quick Reply options
+> e.g. Chat Message with Quick Reply options
 
 See PR [#1211](https://github.com/FaridSafi/react-native-gifted-chat/pull/1211)
 
@@ -284,6 +291,7 @@ interface QuickReplies {
 - **`showUserAvatar`** _(Bool)_ - Whether to render an avatar for the current user; default is `false`, only show avatars for other users
 - **`showAvatarForEveryMessage`** _(Bool)_ - When false, avatars will only be displayed when a consecutive message is from the same user on the same day; default is `false`
 - **`onPressAvatar`** _(Function(`user`))_ - Callback when a message avatar is tapped
+- **`onLongPressAvatar`** _(Function(`user`))_ - Callback when a message avatar is long-pressed
 - **`renderAvatarOnTop`** _(Bool)_ - Render the message avatar at the top of consecutive messages, rather than the bottom; default is `false`
 - **`renderBubble`** _(Function)_ - Custom message bubble
 - **`renderSystemMessage`** _(Function)_ - Custom system message
@@ -293,9 +301,11 @@ interface QuickReplies {
 - **`renderMessage`** _(Function)_ - Custom message container
 - **`renderMessageText`** _(Function)_ - Custom message text
 - **`renderMessageImage`** _(Function)_ - Custom message image
+- **`renderMessageVideo`** _(Function)_ - Custom message video
 - **`imageProps`** _(Object)_ - Extra props to be passed to the [`<Image>`](https://facebook.github.io/react-native/docs/image.html) component created by the default `renderMessageImage`
-- **`videoProps`** _(Object)_ - Extra props to be passed to the [`<Video>`](https://github.com/react-native-community/react-native-video) component created by the default `renderMessageVideo`
+- **`videoProps`** _(Object)_ - Extra props to be passed to the video component created by the required `renderMessageVideo`
 - **`lightboxProps`** _(Object)_ - Extra props to be passed to the `MessageImage`'s [Lightbox](https://github.com/oblador/react-native-lightbox)
+- **`isCustomViewBottom`** _(Bool)_ - Determine wether renderCustomView is displayed before or after the text, image and video views; default is `false`
 - **`renderCustomView`** _(Function)_ - Custom view inside the bubble
 - **`renderDay`** _(Function)_ - Custom day above a message
 - **`renderTime`** _(Function)_ - Custom time inside a message
@@ -314,7 +324,7 @@ interface QuickReplies {
 - **`keyboardShouldPersistTaps`** _(Enum)_ - Determines whether the keyboard should stay visible after a tap; see [`<ScrollView>`](https://facebook.github.io/react-native/docs/scrollview.html) docs
 - **`onInputTextChanged`** _(Function)_ - Callback when the input text changes
 - **`maxInputLength`** _(Integer)_ - Max message composer TextInput length
-- **`parsePatterns`** _(Function)_ - Custom parse patterns for [react-native-parsed-text](https://github.com/taskrabbit/react-native-parsed-text) used to linkify message content (like URLs and phone numbers), e.g.:
+- **`parsePatterns`** _(Function)_ - Custom parse patterns for [react-native-parsed-text](https://github.com/taskrabbit/react-native-parsed-text) used to linking message content (like URLs and phone numbers), e.g.:
 
 ```js
  <GiftedChat
@@ -332,9 +342,13 @@ interface QuickReplies {
 * **`scrollToBottom`** _(Bool)_ - Enables the scrollToBottom Component (Default is false)
 * **`scrollToBottomComponent`** _(Function)_ - Custom Scroll To Bottom Component container
 * **`scrollToBottomOffset`** _(Integer)_ - Custom Height Offset upon which to begin showing Scroll To Bottom Component (Default is 200)
+* **`scrollToBottomStyle`** _(Object)_ - Custom style for Bottom Component container
 * **`alignTop`** _(Boolean)_ Controls whether or not the message bubbles appear at the top of the chat (Default is false - bubbles align to bottom)
 * **`onQuickReply`** _(Function)_ - Callback when sending a quick reply (to backend server)
-* **`renderQuickReply`** _(Function)_ - Custom quick reply view
+* **`renderQuickReplies`** _(Function)_ - Custom all quick reply view
+* **`quickReplyStyle`** _(StyleProp<ViewStyle>)_ - Custom quick reply view style
+* **`renderQuickReplySend`** _(Function)_ - Custom quick reply **send** view
+* **`shouldUpdateMessage`** _(Function)_ - Lets the message component know when to update outside of normal cases.
 
 ## Imperative methods
 
@@ -370,17 +384,68 @@ If you are using Create React Native App / Expo, no Android specific installatio
     android:configChanges="keyboard|keyboardHidden|orientation|screenSize">
   ```
 
-- For **Expo**, there are almost 2 solutions to fix it:
+- For **Expo**, there are at least 2 solutions to fix it:
 
-  - adding KeyboardAvoidingView after GiftedChat [see this comment](https://github.com/FaridSafi/react-native-gifted-chat/issues/461#issuecomment-314858092)
-  - adding an opaque background status bar on app.json https://docs.expo.io/versions/latest/guides/configuration.html#androidstatusbar
+  - Append [`KeyboardAvoidingView`](https://facebook.github.io/react-native/docs/keyboardavoidingview) after GiftedChat. This should only be done for Android, as `KeyboardAvoidingView` may conflict with the iOS keyboard avoidance already built into GiftedChat, e.g.:
+
+```
+<View style={{ flex: 1 }}>
+   <GiftedChat />
+   {
+      Platform.OS === 'android' && <KeyboardAvoidingView behavior="padding" />
+   }
+</View>
+```
+
+If you use React Navigation, additional handling may be required to account for navigation headers and tabs. `KeyboardAvoidingView`'s `keyboardVerticalOffset` property can be set to the height of the navigation header and [`tabBarOptions.keyboardHidesTabBar`](https://reactnavigation.org/docs/en/bottom-tab-navigator.html#bottomtabnavigatorconfig) can be set to keep the tab bar from being shown when the keyboard is up. Due to a [bug with calculating height on Android phones with notches](facebook/react-native#23693), `KeyboardAvoidingView` is recommended over other solutions that involve calculating the height of the window.
+
+- adding an opaque background status bar on app.json (even though `android:windowSoftInputMode="adjustResize"` is set internally on Expo's Android apps, the translucent status bar causes it not to work): https://docs.expo.io/versions/latest/guides/configuration.html#androidstatusbar
 
 - If you plan to use `GiftedChat` inside a `Modal`, see [#200](https://github.com/FaridSafi/react-native-gifted-chat/issues/200).
 
 ## Notes for local development
 
-1. Install `yarn add -g expo-cli`
+### Native
+
+1. Install `yarn add -g expo-cli@3.0.11-alpha.1`
 2. `expo start`
+
+### react-native-web
+
+#### With expo
+
+1. Install `yarn add -g expo-cli@3.0.11-alpha.1`
+2. `expo start -w`
+
+#### With create-react-app
+
+1. `yarn add -D react-app-rewired`
+2. `touch config-overrides.js`
+
+```js
+module.exports = function override(config, env) {
+  config.module.rules.push({
+    test: /\.js$/,
+    exclude: /node_modules[/\\](?!react-native-gifted-chat|react-native-lightbox|react-native-parsed-text|expo-av)/,
+    use: {
+      loader: 'babel-loader',
+      options: {
+        babelrc: false,
+        configFile: false,
+        presets: [
+          ['@babel/preset-env', { useBuiltIns: 'usage' }],
+          '@babel/preset-react',
+        ],
+        plugins: ['@babel/plugin-proposal-class-properties'],
+      },
+    },
+  })
+
+  return config
+}
+```
+
+> **You will find an example and a demo here: [xcarpentier/gifted-chat-web-demo](https://github.com/xcarpentier/gifted-chat-web-demo)**
 
 ## Questions
 
@@ -409,5 +474,9 @@ Feel free to ask me questions on Twitter [@FaridSafi](https://www.twitter.com/Fa
 - Bruno Cascio [brunocascio](https://github.com/brunocascio)
 - Xavier Carpentier [xcarpentier](https://github.com/xcarpentier)
 - [more](https://github.com/FaridSafi/react-native-gifted-chat/graphs/contributors)
+
+## Hire an expert!
+
+Looking for a ReactNative freelance expert with more than 12 years experience? Contact Xavier from his [website](https://xaviercarpentier.com)!
 
 <img src="https://api.keen.io/3.0/projects/5ae31b61c9e77c0001cc2093/events/pageviews?api_key=55301C3E5BAB217E90A5867113C02506CE20385CD6F4C9C1CCDD4671B1A9DE374C3DF9DEF70C0BB3F5A9C5CA4CB1CCCFAF25FC3ED9CF63FB83102456A6881EFBAECD1C7D9718EE5402752DD8F6FA2DEC4D844BCB17FE6262570DB447D9A8CED2&data=eyJ0aXRsZSI6ICJnYyJ9" />

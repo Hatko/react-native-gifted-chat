@@ -6,18 +6,19 @@ import {
   TouchableOpacity,
   View,
   ViewPropTypes,
+  StyleProp,
   ViewStyle,
   TextStyle,
 } from 'react-native'
 import Color from './Color'
 
-interface ActionsProps {
+export interface ActionsProps {
   options?: { [key: string]: any }
   optionTintColor?: string
   icon?: () => ReactNode
-  wrapperStyle?: ViewStyle
-  iconTextStyle?: TextStyle
-  containerStyle?: ViewStyle
+  wrapperStyle?: StyleProp<ViewStyle>
+  iconTextStyle?: StyleProp<TextStyle>
+  containerStyle?: StyleProp<ViewStyle>
   onPressActionButton?(): void
 }
 

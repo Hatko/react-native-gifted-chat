@@ -7,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   View,
   ViewPropTypes,
+  StyleProp,
   ViewStyle,
   TextStyle,
 } from 'react-native'
@@ -21,7 +22,14 @@ import Time from './Time'
 import Color from './Color'
 
 import { isSameUser, isSameDay } from './utils'
-import { User, IMessage, LeftRightStyle, Reply } from './types'
+import {
+  User,
+  IMessage,
+  LeftRightStyle,
+  Reply,
+  Omit,
+  MessageVideoProps,
+} from './types'
 
 const styles = {
   left: StyleSheet.create({
@@ -96,10 +104,30 @@ const styles = {
 
 const DEFAULT_OPTION_TITLES = ['Copy Text', 'Cancel']
 
-interface BubbleProps<TMessage extends IMessage = IMessage> {
+export type RenderMessageImageProps<TMessage extends IMessage> = Omit<
+  BubbleProps<TMessage>,
+  'containerStyle' | 'wrapperStyle'
+> &
+  MessageImage['props']
+
+export type RenderMessageVideoProps<TMessage extends IMessage> = Omit<
+  BubbleProps<TMessage>,
+  'containerStyle' | 'wrapperStyle'
+> &
+  MessageVideoProps<TMessage>
+
+export type RenderMessageTextProps<TMessage extends IMessage> = Omit<
+  BubbleProps<TMessage>,
+  'containerStyle' | 'wrapperStyle'
+> &
+  MessageText['props']
+
+export interface BubbleProps<TMessage extends IMessage> {
   user?: User
   touchableProps?: object
   renderUsernameOnMessage?: boolean
+  isCustomViewBottom?: boolean
+  inverted?: boolean
   position: 'left' | 'right'
   currentMessage?: TMessage
   nextMessage?: TMessage
@@ -109,26 +137,27 @@ interface BubbleProps<TMessage extends IMessage = IMessage> {
   wrapperStyle?: LeftRightStyle<ViewStyle>
   textStyle?: LeftRightStyle<TextStyle>
   bottomContainerStyle?: LeftRightStyle<ViewStyle>
-  tickStyle?: TextStyle
+  tickStyle?: StyleProp<TextStyle>
   containerToNextStyle?: LeftRightStyle<ViewStyle>
   containerToPreviousStyle?: LeftRightStyle<ViewStyle>
   usernameStyle?: LeftRightStyle<ViewStyle>
+  quickReplyStyle?: StyleProp<ViewStyle>
   onLongPress?(context?: any, message?: any): void
   onQuickReply?(replies: Reply[]): void
-  renderMessageImage?(messageImageProps: MessageImage['props']): React.ReactNode
-  renderMessageVideo?(messageVideoProps: MessageVideo['props']): React.ReactNode
-  renderMessageText?(messageTextProps: MessageText['props']): React.ReactNode
-  renderCustomView?(bubbleProps: BubbleProps): React.ReactNode
+  renderMessageImage?(props: RenderMessageImageProps<TMessage>): React.ReactNode
+  renderMessageVideo?(props: RenderMessageVideoProps<TMessage>): React.ReactNode
+  renderMessageText?(props: RenderMessageTextProps<TMessage>): React.ReactNode
+  renderCustomView?(bubbleProps: BubbleProps<TMessage>): React.ReactNode
   renderTime?(timeProps: Time['props']): React.ReactNode
   renderTicks?(currentMessage: TMessage): React.ReactNode
   renderUsername?(): React.ReactNode
+  renderQuickReplySend?(): React.ReactNode
   renderQuickReplies?(quickReplies: QuickReplies['props']): React.ReactNode
-  // TODO: remove in next major release
-  isSameDay?(currentMessage: TMessage, nextMessage: TMessage): boolean
-  isSameUser?(currentMessage: TMessage, nextMessage: TMessage): boolean
 }
 
-export default class Bubble extends React.Component<BubbleProps> {
+export default class Bubble<
+  TMessage extends IMessage = IMessage
+> extends React.Component<BubbleProps<TMessage>> {
   static contextTypes = {
     actionSheet: PropTypes.func,
   }
@@ -171,6 +200,7 @@ export default class Bubble extends React.Component<BubbleProps> {
     renderMessageVideo: PropTypes.func,
     renderMessageText: PropTypes.func,
     renderCustomView: PropTypes.func,
+    isCustomViewBottom: PropTypes.bool,
     renderUsernameOnMessage: PropTypes.bool,
     renderUsername: PropTypes.func,
     renderTime: PropTypes.func,
@@ -235,7 +265,7 @@ export default class Bubble extends React.Component<BubbleProps> {
     }
   }
 
-  handleBubbleToNext() {
+  styledBubbleToNext() {
     const {
       currentMessage,
       nextMessage,
@@ -257,7 +287,7 @@ export default class Bubble extends React.Component<BubbleProps> {
     return null
   }
 
-  handleBubbleToPrevious() {
+  styledBubbleToPrevious() {
     const {
       currentMessage,
       previousMessage,
@@ -280,13 +310,29 @@ export default class Bubble extends React.Component<BubbleProps> {
   }
 
   renderQuickReplies() {
-    const { currentMessage, onQuickReply, nextMessage } = this.props
+    const {
+      currentMessage,
+      onQuickReply,
+      nextMessage,
+      renderQuickReplySend,
+      quickReplyStyle,
+    } = this.props
     if (currentMessage && currentMessage.quickReplies) {
       const { containerStyle, wrapperStyle, ...quickReplyProps } = this.props
       if (this.props.renderQuickReplies) {
         return this.props.renderQuickReplies(quickReplyProps)
       }
-      return <QuickReplies {...{ currentMessage, onQuickReply, nextMessage }} />
+      return (
+        <QuickReplies
+          {...{
+            currentMessage,
+            onQuickReply,
+            nextMessage,
+            renderQuickReplySend,
+            quickReplyStyle,
+          }}
+        />
+      )
     }
     return null
   }
@@ -397,6 +443,24 @@ export default class Bubble extends React.Component<BubbleProps> {
     return null
   }
 
+  renderBubbleContent() {
+    return this.props.isCustomViewBottom ? (
+      <View>
+        {this.renderMessageImage()}
+        {this.renderMessageVideo()}
+        {this.renderMessageText()}
+        {this.renderCustomView()}
+      </View>
+    ) : (
+      <View>
+        {this.renderCustomView()}
+        {this.renderMessageImage()}
+        {this.renderMessageVideo()}
+        {this.renderMessageText()}
+      </View>
+    )
+  }
+
   render() {
     const {
       position,
@@ -415,8 +479,8 @@ export default class Bubble extends React.Component<BubbleProps> {
           style={[
             styles[position].wrapper,
             wrapperStyle && wrapperStyle[position],
-            this.handleBubbleToNext(),
-            this.handleBubbleToPrevious(),
+            this.styledBubbleToNext(),
+            this.styledBubbleToPrevious(),
           ]}
         >
           <TouchableWithoutFeedback
@@ -425,10 +489,7 @@ export default class Bubble extends React.Component<BubbleProps> {
             {...this.props.touchableProps}
           >
             <View>
-              {this.renderCustomView()}
-              {this.renderMessageImage()}
-              {this.renderMessageVideo()}
-              {this.renderMessageText()}
+              {this.renderBubbleContent()}
               <View
                 style={[
                   styles[position].bottom,

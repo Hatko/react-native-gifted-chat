@@ -5,6 +5,7 @@ import {
   Text,
   View,
   ViewPropTypes,
+  StyleProp,
   ViewStyle,
   TextStyle,
 } from 'react-native'
@@ -31,18 +32,20 @@ const styles = StyleSheet.create({
   },
 })
 
-interface DayProps<TMessage extends IMessage = IMessage> {
+export interface DayProps<TMessage extends IMessage> {
   currentMessage?: TMessage
   nextMessage?: TMessage
   previousMessage?: TMessage
-  containerStyle?: ViewStyle
-  wrapperStyle?: ViewStyle
-  textStyle?: TextStyle
+  containerStyle?: StyleProp<ViewStyle>
+  wrapperStyle?: StyleProp<ViewStyle>
+  textStyle?: StyleProp<TextStyle>
   dateFormat?: string
   inverted?: boolean
 }
 
-export default class Day extends PureComponent<DayProps> {
+export default class Day<
+  TMessage extends IMessage = IMessage
+> extends PureComponent<DayProps<TMessage>> {
   static contextTypes = {
     getLocale: PropTypes.func,
   }
@@ -75,25 +78,19 @@ export default class Day extends PureComponent<DayProps> {
       dateFormat,
       currentMessage,
       previousMessage,
-      nextMessage,
       containerStyle,
       wrapperStyle,
       textStyle,
-      inverted,
     } = this.props
 
-    if (
-      currentMessage &&
-      !isSameDay(currentMessage, inverted ? previousMessage! : nextMessage!)
-    ) {
+    if (currentMessage && !isSameDay(currentMessage, previousMessage!)) {
       return (
         <View style={[styles.container, containerStyle]}>
           <View style={wrapperStyle}>
             <Text style={[styles.text, textStyle]}>
               {moment(currentMessage.createdAt)
                 .locale(this.context.getLocale())
-                .format(dateFormat)
-                .toUpperCase()}
+                .format(dateFormat)}
             </Text>
           </View>
         </View>

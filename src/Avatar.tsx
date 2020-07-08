@@ -42,20 +42,23 @@ const styles = {
   }),
 }
 
-interface AvatarProps {
-  currentMessage?: IMessage
-  previousMessage?: IMessage
-  nextMessage?: IMessage
+export interface AvatarProps<TMessage extends IMessage> {
+  currentMessage?: TMessage
+  previousMessage?: TMessage
+  nextMessage?: TMessage
   position: 'left' | 'right'
   renderAvatarOnTop?: boolean
   showAvatarForEveryMessage?: boolean
   imageStyle?: LeftRightStyle<ImageStyle>
   containerStyle?: LeftRightStyle<ViewStyle>
-  renderAvatar?(props: Omit<AvatarProps, 'renderAvatar'>): ReactNode
+  renderAvatar?(props: Omit<AvatarProps<TMessage>, 'renderAvatar'>): ReactNode
   onPressAvatar?(user: User): void
+  onLongPressAvatar?(user: User): void
 }
 
-export default class Avatar extends React.Component<AvatarProps> {
+export default class Avatar<
+  TMessage extends IMessage = IMessage
+> extends React.Component<AvatarProps<TMessage>> {
   static defaultProps = {
     renderAvatarOnTop: false,
     showAvatarForEveryMessage: false,
@@ -68,6 +71,7 @@ export default class Avatar extends React.Component<AvatarProps> {
     containerStyle: {},
     imageStyle: {},
     onPressAvatar: () => {},
+    onLongPressAvatar: () => { },
   }
 
   static propTypes = {
@@ -78,6 +82,7 @@ export default class Avatar extends React.Component<AvatarProps> {
     previousMessage: PropTypes.object,
     nextMessage: PropTypes.object,
     onPressAvatar: PropTypes.func,
+    onLongPressAvatar: PropTypes.func,
     renderAvatar: PropTypes.func,
     containerStyle: PropTypes.shape({
       left: ViewPropTypes.style,
@@ -108,6 +113,10 @@ export default class Avatar extends React.Component<AvatarProps> {
           onPress={() =>
             this.props.onPressAvatar &&
             this.props.onPressAvatar(this.props.currentMessage!.user)
+          }
+          onLongPress={() =>
+            this.props.onLongPressAvatar &&
+            this.props.onLongPressAvatar(this.props.currentMessage!.user)
           }
         />
       )

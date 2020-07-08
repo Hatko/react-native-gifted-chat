@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  StyleProp,
   ImageStyle,
   TextStyle,
 } from 'react-native'
@@ -41,11 +42,12 @@ const styles = StyleSheet.create({
   },
 })
 
-interface GiftedAvatarProps {
+export interface GiftedAvatarProps {
   user?: User
-  avatarStyle?: ImageStyle
-  textStyle?: TextStyle
+  avatarStyle?: StyleProp<ImageStyle>
+  textStyle?: StyleProp<TextStyle>
   onPress?(props: any): void
+  onLongPress?(props: any): void
 }
 
 export default class GiftedAvatar extends React.Component<GiftedAvatarProps> {
@@ -102,7 +104,7 @@ export default class GiftedAvatar extends React.Component<GiftedAvatarProps> {
     const { user } = this.props
     if (user) {
       if (typeof user.avatar === 'function') {
-        return user.avatar()
+        return user.avatar([styles.avatarStyle, this.props.avatarStyle])
       } else if (typeof user.avatar === 'string') {
         return (
           <Image
@@ -130,6 +132,15 @@ export default class GiftedAvatar extends React.Component<GiftedAvatarProps> {
     )
   }
 
+  handleOnPress = () => {
+    const { onPress, ...other } = this.props
+    if (this.props.onPress) {
+      this.props.onPress(other)
+    }
+  }
+
+  handleOnLongPress = () => {}
+
   render() {
     if (
       !this.props.user ||
@@ -151,12 +162,8 @@ export default class GiftedAvatar extends React.Component<GiftedAvatarProps> {
       return (
         <TouchableOpacity
           disabled={!this.props.onPress}
-          onPress={() => {
-            const { onPress, ...other } = this.props
-            if (this.props.onPress) {
-              this.props.onPress(other)
-            }
-          }}
+          onPress={this.props.onPress}
+          onLongPress={this.props.onLongPress}
           accessibilityTraits='image'
         >
           {this.renderAvatar()}
@@ -169,12 +176,8 @@ export default class GiftedAvatar extends React.Component<GiftedAvatarProps> {
     return (
       <TouchableOpacity
         disabled={!this.props.onPress}
-        onPress={() => {
-          const { onPress, ...other } = this.props
-          if (this.props.onPress) {
-            this.props.onPress(other)
-          }
-        }}
+        onPress={this.props.onPress}
+        onLongPress={this.props.onLongPress}
         style={[
           styles.avatarStyle,
           { backgroundColor: this.avatarColor },

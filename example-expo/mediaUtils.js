@@ -1,11 +1,13 @@
-import { Permissions, Location, ImagePicker, Linking } from 'expo'
+import { Linking } from 'expo'
+import * as Location from 'expo-location'
+import * as Permissions from 'expo-permissions'
+import * as ImagePicker from 'expo-image-picker'
 
 import { Alert } from 'react-native'
 
 export default async function getPermissionAsync(permission) {
   const { status } = await Permissions.askAsync(permission)
   if (status !== 'granted') {
-    const { name } = Constants.manifest
     const permissionName = permission.toLowerCase().replace('_', ' ')
     Alert.alert(
       'Cannot be done 😞',

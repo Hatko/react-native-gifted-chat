@@ -1,13 +1,22 @@
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
-import { Text, StyleSheet, View, TouchableOpacity } from 'react-native'
+import {
+  Text,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  StyleProp,
+  ViewStyle,
+} from 'react-native'
 import { IMessage, Reply } from './types'
 import Color from './Color'
+import { warning } from './utils'
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    maxWidth: 300,
   },
   quickReply: {
     justifyContent: 'center',
@@ -20,6 +29,9 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     margin: 3,
   },
+  quickReplyText: {
+    overflow: 'visible',
+  },
   sendLink: {
     borderWidth: 0,
   },
@@ -30,15 +42,17 @@ const styles = StyleSheet.create({
   },
 })
 
-interface QuickRepliesProps {
+export interface QuickRepliesProps {
   nextMessage?: IMessage
   currentMessage?: IMessage
   color?: string
   sendText?: string
+  quickReplyStyle?: StyleProp<ViewStyle>
   onQuickReply?(reply: Reply[]): void
+  renderQuickReplySend?(): React.ReactNode
 }
 
-interface QuickRepliesState {
+export interface QuickRepliesState {
   replies: Reply[]
 }
 
@@ -60,6 +74,8 @@ export default class QuickReplies extends Component<
     color: Color.peterRiver,
     sendText: 'Send',
     keepReplies: false,
+    renderQuickReplySend: undefined,
+    quickReplyStyle: undefined,
   }
 
   static propTypes = {
@@ -95,7 +111,7 @@ export default class QuickReplies extends Component<
         }
 
         default: {
-          console.warn(`[GiftedChat.onQuickReply] unknown type: ` + type)
+          warning(`onQuickReply unknown type: ${type}`)
           return
         }
       }
@@ -118,18 +134,37 @@ export default class QuickReplies extends Component<
     const { currentMessage, nextMessage } = this.props
     const hasReplies = !!currentMessage && !!currentMessage!.quickReplies
     const hasNext = !!nextMessage && !!nextMessage!._id
+    const keepIt = currentMessage!.quickReplies!.keepIt
 
     if (hasReplies && !hasNext) {
       return true
     }
-    if (hasReplies && hasNext && currentMessage!.quickReplies!.keepIt) {
+    if (hasReplies && hasNext && keepIt) {
       return true
     }
     return false
   }
 
+  renderQuickReplySend = () => {
+    const { replies } = this.state
+    const { sendText, renderQuickReplySend: customSend } = this.props
+
+    return (
+      <TouchableOpacity
+        style={[styles.quickReply, styles.sendLink]}
+        onPress={this.handleSend(replies)}
+      >
+        {customSend ? (
+          customSend()
+        ) : (
+          <Text style={styles.sendLinkText}>{sendText}</Text>
+        )}
+      </TouchableOpacity>
+    )
+  }
+
   render() {
-    const { currentMessage, color, sendText } = this.props
+    const { currentMessage, color, quickReplyStyle } = this.props
     const { replies } = this.state
 
     if (!this.shouldComponentDisplay()) {
@@ -140,37 +175,36 @@ export default class QuickReplies extends Component<
 
     return (
       <View style={styles.container}>
-        {currentMessage!.quickReplies!.values.map((reply: Reply) => {
-          const selected = type === 'checkbox' && replies.find(sameReply(reply))
-          return (
-            <TouchableOpacity
-              onPress={this.handlePress(reply)}
-              style={[
-                styles.quickReply,
-                ,
-                { borderColor: color },
-                selected && { backgroundColor: color },
-              ]}
-              key={reply.value}
-            >
-              <Text
-                numberOfLines={2}
-                ellipsizeMode={'tail'}
-                style={{ color: selected ? Color.white : color }}
+        {currentMessage!.quickReplies!.values.map(
+          (reply: Reply, index: number) => {
+            const selected =
+              type === 'checkbox' && replies.find(sameReply(reply))
+            return (
+              <TouchableOpacity
+                onPress={this.handlePress(reply)}
+                style={[
+                  styles.quickReply,
+                  quickReplyStyle,
+                  { borderColor: color },
+                  selected && { backgroundColor: color },
+                ]}
+                key={`${reply.value}-${index}`}
               >
-                {reply.title}
-              </Text>
-            </TouchableOpacity>
-          )
-        })}
-        {replies.length > 0 && (
-          <TouchableOpacity
-            style={[styles.quickReply, styles.sendLink]}
-            onPress={this.handleSend(replies)}
-          >
-            <Text style={styles.sendLinkText}>{sendText}</Text>
-          </TouchableOpacity>
+                <Text
+                  numberOfLines={2}
+                  ellipsizeMode={'tail'}
+                  style={[
+                    styles.quickReplyText,
+                    { color: selected ? Color.white : color },
+                  ]}
+                >
+                  {reply.title}
+                </Text>
+              </TouchableOpacity>
+            )
+          },
         )}
+        {replies.length > 0 && this.renderQuickReplySend()}
       </View>
     )
   }

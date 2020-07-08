@@ -31,7 +31,7 @@ const styles = {
   }),
 }
 
-interface MessageProps<TMessage extends IMessage = IMessage> {
+export interface MessageProps<TMessage extends IMessage> {
   key: any
   showUserAvatar?: boolean
   position: 'left' | 'right'
@@ -45,9 +45,15 @@ interface MessageProps<TMessage extends IMessage = IMessage> {
   renderDay?(props: Day['props']): React.ReactNode
   renderSystemMessage?(props: SystemMessage['props']): React.ReactNode
   renderAvatar?(props: Avatar['props']): React.ReactNode
+  shouldUpdateMessage?(
+    props: MessageProps<IMessage>,
+    nextProps: MessageProps<IMessage>,
+  ): boolean
 }
 
-export default class Message extends React.Component<MessageProps> {
+export default class Message<
+  TMessage extends IMessage = IMessage
+> extends React.Component<MessageProps<TMessage>> {
   static defaultProps = {
     renderAvatar: undefined,
     renderBubble: null,
@@ -61,6 +67,7 @@ export default class Message extends React.Component<MessageProps> {
     containerStyle: {},
     showUserAvatar: false,
     inverted: true,
+    shouldUpdateMessage: undefined,
   }
 
   static propTypes = {
@@ -79,13 +86,21 @@ export default class Message extends React.Component<MessageProps> {
       left: ViewPropTypes.style,
       right: ViewPropTypes.style,
     }),
+    shouldUpdateMessage: PropTypes.func,
   }
 
-  shouldComponentUpdate(nextProps: MessageProps) {
+  shouldComponentUpdate(nextProps: MessageProps<TMessage>) {
     const next = nextProps.currentMessage!
     const current = this.props.currentMessage!
-    const { nextMessage } = this.props
+    const { previousMessage, nextMessage } = this.props
     const nextPropsMessage = nextProps.nextMessage
+    const nextPropsPreviousMessage = nextProps.previousMessage
+
+    const shouldUpdate =
+      (this.props.shouldUpdateMessage &&
+        this.props.shouldUpdateMessage(this.props, nextProps)) ||
+      false
+
     return (
       next.sent !== current.sent ||
       next.received !== current.received ||
@@ -95,7 +110,9 @@ export default class Message extends React.Component<MessageProps> {
       next.image !== current.image ||
       next.video !== current.video ||
       next.audio !== current.audio ||
-      nextMessage !== nextPropsMessage
+      previousMessage !== nextPropsPreviousMessage ||
+      nextMessage !== nextPropsMessage ||
+      shouldUpdate
     )
   }
 

@@ -48,15 +48,17 @@ const styles = {
   }),
 }
 
-interface TimeProps<TMessage extends IMessage = IMessage> {
+export interface TimeProps<TMessage extends IMessage> {
   position: 'left' | 'right'
   currentMessage?: TMessage
   containerStyle?: LeftRightStyle<ViewStyle>
-  textStyle?: LeftRightStyle<TextStyle>
+  timeTextStyle?: LeftRightStyle<TextStyle>
   timeFormat?: string
 }
 
-export default class Time extends Component<TimeProps> {
+export default class Time<
+  TMessage extends IMessage = IMessage
+> extends Component<TimeProps<TMessage>> {
   static contextTypes = {
     getLocale: PropTypes.func,
   }
@@ -67,7 +69,6 @@ export default class Time extends Component<TimeProps> {
       createdAt: null,
     },
     containerStyle: {},
-    textStyle: {},
     timeFormat: TIME_FORMAT,
     timeTextStyle: {},
   }
@@ -78,10 +79,6 @@ export default class Time extends Component<TimeProps> {
     containerStyle: PropTypes.shape({
       left: ViewPropTypes.style,
       right: ViewPropTypes.style,
-    }),
-    textStyle: PropTypes.shape({
-      left: PropTypes.any,
-      right: PropTypes.any,
     }),
     timeFormat: PropTypes.string,
     timeTextStyle: PropTypes.shape({
@@ -96,7 +93,7 @@ export default class Time extends Component<TimeProps> {
       containerStyle,
       currentMessage,
       timeFormat,
-      textStyle,
+      timeTextStyle,
     } = this.props
 
     if (!!currentMessage) {
@@ -111,7 +108,7 @@ export default class Time extends Component<TimeProps> {
             style={
               [
                 styles[position].text,
-                textStyle && textStyle[position],
+                timeTextStyle && timeTextStyle[position],
               ] as TextStyle
             }
           >

@@ -1,6 +1,6 @@
 {
   "name": "react-native-gifted-chat",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "The most complete chat UI for React Native",
   "main": "node_modules/expo/AppEntry.js",
   "types": "lib/index.d.ts",
@@ -29,14 +29,14 @@
     "config:npm": "json -I -f package.json -e 'this.main=\"lib/index.js\"'",
     "lint": "tslint --project .",
     "tsc": "node_modules/.bin/tsc --noEmit",
+    "start": "yarn config:dev && expo start",
+    "start:web": "yarn config:dev && expo start -w",
     "build": "rm -rf lib/ && node_modules/.bin/tsc",
-    "precommit": "yarn lint",
     "test": "TZ=Europe/Paris jest --no-watchman",
     "test:watch": "TZ=Europe/Paris jest --watch",
     "test:coverage": "TZ=Europe/Paris jest --coverage",
     "prepublishOnly": "yarn lint && yarn build && yarn test && yarn config:npm",
-    "postpublish": "yarn config:dev",
-    "postinstall": "cd node_modules/react-native-gifted-chat && yarn install && yarn lint && yarn build && yarn config:npm && rm -rf node_modules"
+    "postpublish": "yarn config:dev"
   },
   "jest": {
     "preset": "react-native",
@@ -57,7 +57,6 @@
       "**/*.test.ts?(x)"
     ],
     "modulePathIgnorePatterns": [
-      "<rootDir>/example",
       "<rootDir>/example-expo",
       "<rootDir>/example-slack-message"
     ]
@@ -65,43 +64,60 @@
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-typescript": "^7.1.0",
-    "@types/jest": "24.0.13",
+    "@types/jest": "24.0.17",
     "@types/react": "^16.7.17",
     "@types/react-native": "^0.57.19",
     "@types/react-native-communications": "2.2.1",
-    "@types/react-native-video": "3.1.2",
-    "@types/react-test-renderer": "16.8.1",
-    "@types/uuid": "3.4.4",
+    "@types/react-native-video": "3.1.5",
+    "@types/react-test-renderer": "16.8.3",
+    "@types/uuid": "3.4.5",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "24.7.1",
-    "babel-preset-expo": "^5.0.0",
-    "husky": "0.15.0-rc.2",
-    "jest-expo": "^32.0.0",
-    "prettier": "1.15.3",
-    "prop-types": "15.6.2",
-    "react": "16.5.1",
+    "babel-preset-expo": "^7.0.0",
+    "expo": "^35.0.0",
+    "expo-constants": "~7.0.0",
+    "expo-image-picker": "~7.0.0",
+    "expo-location": "~7.0.0",
+    "expo-permissions": "~7.0.0",
+    "husky": "^3.0.0",
+    "jest-expo": "^35.0.0",
     "json": "^9.0.6",
+    "prettier": "1.18.0",
+    "react": "16.8.3",
+    "react-dom": "16.8.3",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
+    "react-native-nav": "2.0.2",
+    "react-native-web": "^0.11.1",
+    "react-native-web-maps": "0.2.0",
     "react-test-renderer": "16.5.1",
     "tslint": "5.12.0",
     "tslint-config-prettier": "1.17.0",
-    "typescript": "3.4.5",
-    "expo": "^32.0.0",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
-    "react-native-nav": "2.0.2"
+    "typescript": "3.4.5"
   },
   "dependencies": {
-    "@expo/react-native-action-sheet": "^2.0.1",
+    "@expo/react-native-action-sheet": "^3.0.3",
+    "expo-av": "~7.0.0",
     "moment": "^2.19.0",
+    "prop-types": "15.7.2",
     "react-native-communications": "2.2.1",
     "react-native-iphone-x-helper": "^1.2.0",
     "react-native-lightbox": "^0.7.0",
-    "react-native-parsed-text": "^0.0.21",
-    "uuid": "3.3.0"
+    "react-native-maps": "~0.25.0",
+    "react-native-parsed-text": "https://github.com/EvanBacon/react-native-parsed-text.git",
+    "react-native-video": "5.0.2",
+    "uuid": "3.3.3"
   },
   "peerDependencies": {
-    "prop-types": "*",
+    "expo-av": "*",
+    "moment": "*",
     "react": "*",
+    "react-dom": "*",
     "react-native": "*",
     "react-native-video": "*"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint && yarn tsc"
+    }
   }
 }
